@@ -235,7 +235,7 @@ def download_vinted_data(userids, s):
                 # print(jsonresponse)
 
                 if products:
-                    # Download all products
+                    # Download all product
                     path= "downloads/" + str(USER_ID) +'/'
                     try:
                         os.mkdir(path)
@@ -253,7 +253,7 @@ def download_vinted_data(userids, s):
                             size = product['size']
                             State = product['status']
                             Brand = product['brand']
-                            print(''+ product['brand'])
+                            #print(''+ product['brand'])
                             Colors = product['color1']
                             Price = product['price']
                             Price = f"{Price['amount']} {Price['currency_code']}"

@@ -13,7 +13,7 @@ if __name__ == '__main__':
     options.add_argument('--user-data-dir=/Users/meduzastore/Library/Application Support/Google/Chrome/Default')
 
     browser = uc.Chrome(
-        options=options,
+        #options=options,
     )
     browser.get('https://vinted.fr')
     time.sleep(120)

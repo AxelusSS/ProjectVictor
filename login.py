@@ -9,3 +9,4 @@ urlBrouillon = "https://www.vinted.fr/items/new"
 # ID du compte de la boutique
 USER_ID = "16451173"
 #https://www.vinted.nl/api/v2/users/16451173/msg_threads
+waitTime = 300

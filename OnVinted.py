@@ -4,7 +4,7 @@
 # Code crée en très grande partie avec le code scraper.py de Gertje823
 # GitHub code : https://github.com/Gertje823/Vinted-Scraper/blob/main/LICENSE
 #///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+import mysql
 import requests
 import json
 import os.path
@@ -45,7 +45,7 @@ conn = sqlite3.connect(sqlite_file)
 c = conn.cursor()
 # Create Data table if not exists
 c.execute('''CREATE TABLE IF NOT EXISTS Data
-             (ID, User_id, Sold, Gender, Category, subcategory, size, State, Brand, Colors, Price, Image, Images, Description, Title, Onsale, Platform)''')
+             (ID, User_id, Sold, Gender, Category, subcategory, size, State, Brand, Colors, Price, Image, Images, Description, Title, Platform)''')
 # Create Users table if not exists
 c.execute('''CREATE TABLE IF NOT EXISTS Users
              (Username, User_id, Gender, Given_item_count, Taken_item_count, Followers_count, Following_count, Positive_feedback_count, Negative_feedback_count, Feedback_reputation, Avatar, Created_at, Last_loged_on_ts, City_id, City, Country_title, Verification_email, Verification_facebook, Verification_google, Verification_phone, Platform)''')
@@ -198,18 +198,19 @@ def download_vinted_data(userids, s):
                             Gender = product['user']['gender']
                             Category = product['catalog_id']
                             size = product['size']
-                            State = product['conditon']
+                            State = product['status']
                             Brand = product['brand']
                             Colors = product['color1']
                             Price = product['price']
                             Price = f"{Price['amount']} {Price['currency_code']}"
                             Images = product['photos']
                             title = product['title']
-                            Onsale = product['']
+                            #sidebar > div.web_ui__Cell__cell.web_ui__Cell__default.web_ui__Cell__success > div > div
+                            #Onsale = product['status'] Trouver un moyen de recolter si oui ou non l'article est déjà vendu !
                             path= "downloads/" + str(User_id) +'/'
 
-                            params = (ID, User_id, Gender, Category, size, State, Brand, Colors, Price, description, title, Onsale, Platform)
-                            c.execute("INSERT INTO Data(ID, User_id, Gender, Category, size, State, Brand, Colors, Price, description, title, Platform)VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)", params)
+                            params = (ID, User_id, Gender, Category, size, State, Brand, Colors, Price, description, title, Platform)
+                            c.execute("INSERT INTO Data(ID, User_id, Gender, Category, size, State, Brand, Colors, Price, description, title, Platform)VALUES (?,?,?,?,?,?,?,?,?,?,?,?)", params)
                             conn.commit()
                             with open(filepath, 'wb') as f:
                                 f.write(req.content)
@@ -232,9 +233,6 @@ def download_vinted_data(userids, s):
             continue
         else:
             print(f"User {USER_ID} does not exists")
-    conn.close()
-
-
 
 
 
@@ -251,11 +249,8 @@ download_vinted_data(userids, session)
 # Recupere les QWE de chaque articles et pour comparer ceux présent sur le site ou non
 # Créée la table OnVinted qui detmine quel QWE est présent sur vinted
 #///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-sqlite_file = 'data.sqlite'
-conn = sqlite3.connect(sqlite_file)
-c = conn.cursor()
 c.execute('''CREATE TABLE IF NOT EXISTS OnVinted
-             (ID, QWE, STAT)''')
+             (ID, QWE)''')
 conn.commit()
 
 line = c.execute("SELECT COUNT(*) FROM Data").fetchone()[0]
@@ -266,13 +261,11 @@ for i in range(line) :
     if id_result:
         id = id_result[0]
         title_result = c.execute("SELECT Title FROM Data WHERE ID = ?", (id,)).fetchone()
-        stat_result = c.execute("SELECT Onsale FROM Data WHERE ID = ?", (id,)).fetchone()
-        if title_result and stat_result:
+        if title_result:
             title = title_result[0]
-            stat = stat_result[0]
             qwe = title[-8:]
-            params = (id, qwe, stat)
-            c.execute(f"INSERT OR IGNORE INTO OnVinted(ID, QWE, STAT) VALUES (?, ?, ?)", params)
+            params = (id, qwe)
+            c.execute(f"INSERT OR IGNORE INTO OnVinted(ID, QWE) VALUES (?, ?)", params)
             conn.commit()
             c.execute(f"DELETE FROM Data WHERE ID = {id}")
             conn.commit()
@@ -284,10 +277,30 @@ for i in range(line) :
 # Creer la colonne OnSale sur la vrai BDD (Bool False par defaut)
 # Mettre le Boolean à True si il est en vente
 #
-#def OnSale():
 
+def OnSale():
+    db = mysql.connector.connect(
+        host="meduza.store",
+        user="meduza",
+        password="azerty",
+        database="meduza"
+    )
+    d = db.cursor()
 
-
+    line = c.execute("SELECT COUNT(*) FROM Data").fetchone()[0]
+    conn.commit()
+    for i in range(line):
+        id_result = c.execute("SELECT ID FROM Data LIMIT 1").fetchone()
+        if id_result:
+            id = id_result[0]
+            onsale_result = c.execute("SELECT OnSale FROM Data WHERE ID = ?", (id,)).fetchone()
+            if onsale_result:
+                onsale = onsale_result[0]
+                d.execute("UPDATE BD SET OnSale TRUE WHERE ID = ?", (id,))
+                conn.commit()
+                c.execute(f"DELETE FROM OnVinted WHERE ID = {id}")
+                conn.commit()
+    conn.close()
 
 
 
