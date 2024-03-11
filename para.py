@@ -1,12 +1,2 @@
-sexe = "Homme"
-titre = "Jean + Hoodie"
-typeart = "Jean troué"
-taille = "XL"
-cat = "Jean"
-brand = "Levi's"
-state = "10"
-mat = "Polyester"
-color = "Bleu"
-prix = "60"
 coffee = 126
 bear = 4
